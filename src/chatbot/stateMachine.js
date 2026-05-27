@@ -19,40 +19,26 @@ const bootstrapContext = require('./bootstrapContext');
 
 
 function mapEtapaToInstrucao(etapa, msg) {
+  // Prefere o conteúdo real do handler — humanizador deve trabalhar com dados reais
+  if (typeof msg === 'string' && msg.trim().length > 15) return msg;
+
+  // Fallback genérico por etapa (quando msg está vazio ou muito curto)
   switch (etapa) {
-    case 'MONTANDO_TAMANHO':
-      return 'Qual tamanho de marmita você deseja? Precisa ser Pequena ou Grande.';
-    case 'MONTANDO_PROTEINA':
-      return 'Escolha a proteína principal do seu pedido. Pode ser Frango, Churrasco, Costela, Linguiça ou Carne.';
-    case 'MONTANDO_ACOMPANHAMENTO':
-      return 'Escolha os acompanhamentos para sua marmita. Temos arroz, feijão, purê, macarrão ou tropeiro.';
-    case 'MONTANDO_SALADA':
-      return 'Deseja adicionar salada? Temos Maionese, Beterraba, Alface, Repolho ou Pepino.';
-    case 'OFERECENDO_UPSELL':
-      return 'Gostaria de adicionar bebida ou sobremesa ao pedido? Suco Natural, Refrigerante ou sobremesa. Se não quiser, só diga "não".';
-    case 'AGUARDANDO_TIPO':
-      return 'Será entrega ou retirada? Informe o tipo de pedido.';
-    case 'AGUARDANDO_ENDERECO':
-      return 'Por favor, informe o endereço para entrega. Não esqueça rua, número e bairro.';
-    case 'AGUARDANDO_PAGAMENTO':
-      return 'Como prefere pagar? Pix, cartão ou dinheiro? Se precisar de troco, informe o valor.';
-    case 'CONFIRMANDO':
-      return 'Confira o resumo do pedido e confirme para finalizar. Se precisar de algo, peça agora.';
-    case 'FINALIZADO':
-      return 'Pedido confirmado! Aqui está o resumo e o tempo de entrega estimado.';
-    // Casos especiais para testes realistas
-    case 'CANCELADO':
-      return 'Pedido cancelado conforme solicitado.';
-    case 'PERSONALIZACAO':
-      return 'Personalização anotada: sem cebola, capricho na batata!';
-    case 'RECLAMACAO':
-      return 'Desculpe pelo ocorrido! Vamos corrigir e resolver o mais rápido possível.';
-    case 'PRESSA':
-      return 'Vamos priorizar seu pedido para entregar o mais rápido possível!';
-    case 'INDISPONIVEL':
-      return 'Infelizmente não temos esse item disponível hoje.';
+    case 'MONTANDO_TAMANHO':       return 'Qual tamanho de marmita? Pequena ou Grande.';
+    case 'MONTANDO_PROTEINA':      return 'Escolha a proteína: Frango, Churrasco, Costela, Linguiça ou Carne Cozida.';
+    case 'MONTANDO_ACOMPANHAMENTO': return 'Escolha os acompanhamentos: arroz, feijão, purê, macarrão ou tropeiro.';
+    case 'MONTANDO_SALADA':        return 'Deseja salada? Maionese, Beterraba, Alface, Repolho ou Pepino.';
+    case 'OFERECENDO_UPSELL':      return 'Gostaria de adicionar bebida ou sobremesa? Suco, Refrigerante ou sobremesa. Se não, só diga "não".';
+    case 'AGUARDANDO_TIPO':        return 'Será entrega ou retirada?';
+    case 'AGUARDANDO_ENDERECO':    return 'Por favor, informe o endereço para entrega (rua, número e bairro).';
+    case 'AGUARDANDO_PAGAMENTO':   return 'Como prefere pagar? Pix, cartão ou dinheiro?';
+    case 'CONFIRMANDO':            return 'Confira o resumo do pedido e confirme para finalizar.';
+    case 'FINALIZADO':             return 'Pedido confirmado! Aqui está o resumo e o tempo de entrega estimado.';
+    case 'CANCELADO':              return 'Pedido cancelado conforme solicitado.';
+    case 'RECLAMACAO':             return 'Desculpe pelo ocorrido! Vamos corrigir o mais rápido possível.';
+    case 'PRESSA':                 return 'Vamos priorizar seu pedido para entregar o mais rápido possível!';
+    case 'INDISPONIVEL':           return 'Infelizmente não temos esse item disponível hoje.';
     default:
-      // Se a mensagem original já for clara, usa ela
       if (typeof msg === 'string' && msg.length > 0) return msg;
       return 'Como posso ajudar com seu pedido?';
   }
