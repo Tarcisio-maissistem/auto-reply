@@ -178,8 +178,8 @@
       } else if (name === 'sistema' && btns.conta) {
         btns.conta.classList.add('active');
       }
-      // Mostra logout sempre que não está na tela de login
-      btnLogout.style.display = (name === 'conta') ? 'none' : 'flex';
+      // Mostra logout apenas na view sistema (não no whatsapp)
+      btnLogout.style.display = (name === 'sistema') ? 'flex' : 'none';
       if (name !== 'conta') isLoggedIn = true;
     }
 
@@ -199,7 +199,7 @@
 
     ipcRenderer.on('merchant-logged-in', (_, data) => {
       isLoggedIn = true;
-      btnLogout.style.display = 'flex';
+      // Logout só aparece quando na view sistema (setActive cuida disso)
       btns.conta.title = data.companyName || data.email || 'Painel';
     });
 
