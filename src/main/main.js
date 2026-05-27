@@ -570,18 +570,13 @@ function showView(name) {
   } else if (name === 'whatsapp' && whatsappView && !whatsappView.webContents.isDestroyed()) {
     whatsappView.setBounds(cb);
   } else if (name === 'sistema' && systemView && !systemView.webContents.isDestroyed()) {
-    // Sistema: React app ocupa largura total — sem sidebar Electron
-    systemView.setBounds(fullCb);
+    systemView.setBounds(cb);
   }
 
-  // Sidebar Electron: visível apenas em conta/whatsapp; oculta em sistema
+  // Sidebar Electron: sempre visível (logout acessível em todas as views)
   if (sidebarView && !sidebarView.webContents.isDestroyed()) {
-    if (name === 'sistema') {
-      sidebarView.setBounds(zero);
-    } else {
-      sidebarView.setBounds({ x: 0, y: configs.titlebarHeight, width: configs.sidebarWidth, height: h - configs.titlebarHeight });
-      mainWindow.setTopBrowserView(sidebarView);
-    }
+    sidebarView.setBounds({ x: 0, y: configs.titlebarHeight, width: configs.sidebarWidth, height: h - configs.titlebarHeight });
+    mainWindow.setTopBrowserView(sidebarView);
   }
 
   // Titlebar sempre no topo
@@ -607,18 +602,15 @@ function resizeAllViews() {
     titlebarView.setBounds({ x: 0, y: 0, width: w, height: configs.titlebarHeight });
   }
 
+  // Sidebar sempre visível
   if (sidebarView && !sidebarView.webContents.isDestroyed()) {
-    if (activeView === 'sistema') {
-      sidebarView.setBounds(zero);
-    } else {
-      sidebarView.setBounds({ x: 0, y: configs.titlebarHeight, width: configs.sidebarWidth, height: h - configs.titlebarHeight });
-    }
+    sidebarView.setBounds({ x: 0, y: configs.titlebarHeight, width: configs.sidebarWidth, height: h - configs.titlebarHeight });
   }
 
   if (loginView && !loginView.webContents.isDestroyed())
     loginView.setBounds(activeView === 'conta' ? cb : zero);
   if (systemView && !systemView.webContents.isDestroyed())
-    systemView.setBounds(activeView === 'sistema' ? fullCb : zero);
+    systemView.setBounds(activeView === 'sistema' ? cb : zero);
   // whatsappView gerido por setBoundsIfValid()
 }
 
@@ -697,9 +689,9 @@ function setBoundsIfValid() {
   }
 
   if (whatsappBounds && whatsappBounds.width > 0 && whatsappBounds.height > 0) {
-    // systemView agora começa em x=0 quando em 'sistema' — sem offset de sidebar
+    // systemView começa em x=sidebarWidth — adicionar offset ao x dos bounds
     whatsappView.setBounds({
-      x: whatsappBounds.x || 0,
+      x: (whatsappBounds.x || 0) + configs.sidebarWidth,
       y: (whatsappBounds.y || 0) + configs.titlebarHeight,
       width: whatsappBounds.width,
       height: whatsappBounds.height,

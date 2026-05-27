@@ -15,8 +15,7 @@
       overflow: hidden;
     }
     .title {
-      /* offset by sidebar width (60px) so title doesn't sit behind it */
-      padding-left: 72px;
+      padding-left: 12px;
       color: #aaa;
       font-size: 13px;
       font-family: 'Segoe UI', sans-serif;
@@ -28,14 +27,14 @@
     .controls {
       display: flex;
       height: 40px;
-      /* right margin so buttons aren't flush against screen edge */
       padding-right: 4px;
+      align-items: center;
+      gap: 2px;
       -webkit-app-region: no-drag;
     }
     .btn {
       width: 40px;
       height: 32px;
-      margin: auto 2px;
       border: none;
       border-radius: 6px;
       background: transparent;
@@ -49,6 +48,34 @@
     }
     .btn:hover { background: rgba(255,255,255,0.1); }
     .btn.close:hover { background: #e81123; color: #fff; }
+
+    /* Logout — separador visual antes dos controles de janela */
+    .btn-logout {
+      width: auto;
+      padding: 0 10px;
+      height: 26px;
+      border: none;
+      border-radius: 5px;
+      background: rgba(239,68,68,0.15);
+      color: rgba(239,68,68,0.85);
+      font-size: 11px;
+      font-family: 'Segoe UI', sans-serif;
+      cursor: pointer;
+      display: none;             /* oculto até login */
+      align-items: center;
+      gap: 5px;
+      margin-right: 6px;
+      transition: background 0.1s, color 0.1s;
+    }
+    .btn-logout:hover { background: rgba(239,68,68,0.3); color: #fff; }
+    .btn-logout.visible { display: flex; }
+
+    .separator {
+      width: 1px;
+      height: 18px;
+      background: rgba(255,255,255,0.1);
+      margin: 0 4px;
+    }
   </style>
 </head>
 <body>
@@ -58,16 +85,38 @@
     </svg>
     Ana Food
   </div>
+
   <div class="controls">
+    <!-- Sair da conta — visível apenas quando logado -->
+    <button class="btn-logout" id="btn-logout" title="Sair da conta">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/>
+      </svg>
+      Sair da Conta
+    </button>
+
+    <div class="separator"></div>
+
     <button class="btn" id="btn-min" title="Minimizar">&#8722;</button>
     <button class="btn" id="btn-max" title="Maximizar">&#9633;</button>
     <button class="btn close" id="btn-close" title="Fechar">&#10005;</button>
   </div>
+
   <script>
     const { ipcRenderer } = require('electron');
-    document.getElementById('btn-min').onclick = () => ipcRenderer.send('minimize');
-    document.getElementById('btn-max').onclick = () => ipcRenderer.send('maximize');
-    document.getElementById('btn-close').onclick = () => ipcRenderer.send('close');
+
+    document.getElementById('btn-min').onclick    = () => ipcRenderer.send('minimize');
+    document.getElementById('btn-max').onclick    = () => ipcRenderer.send('maximize');
+    document.getElementById('btn-close').onclick  = () => ipcRenderer.send('close');
+    document.getElementById('btn-logout').onclick = () => ipcRenderer.send('logout-from-titlebar');
+
+    // Mostrar/ocultar botão de logout conforme estado de login
+    ipcRenderer.on('titlebar-set-logged-in', () => {
+      document.getElementById('btn-logout').classList.add('visible');
+    });
+    ipcRenderer.on('titlebar-set-logged-out', () => {
+      document.getElementById('btn-logout').classList.remove('visible');
+    });
   </script>
 </body>
 </html>
