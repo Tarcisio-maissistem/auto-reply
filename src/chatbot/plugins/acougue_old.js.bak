@@ -1,0 +1,212 @@
+// plugins/acougue.js
+// ═══════════════════════════════════════════════════════════════
+// Plugin Açougue — Fluxo: Corte → Peso/Quantidade → Preparo → Upsell
+// ═══════════════════════════════════════════════════════════════
+
+const ai = require('../aiInterpreter');
+const T = require('../templates');
+
+const business_type = 'acougue';
+
+const FLOW_STEPS = [
+  'MONTANDO_CORTE',
+  'MONTANDO_PESO',
+  'MONTANDO_PREPARO',
+  'OFERECENDO_UPSELL'
+];
+
+const DEFAULT_CARDAPIO = {
+  cortes: [
+    { name: 'Picanha', price: 69.90, apelidos: ['picanha'] },
+    { name: 'Maminha', price: 49.90, apelidos: ['maminha'] },
+    { name: 'Costela Bovina', price: 34.90, apelidos: ['costela'] },
+    { name: 'Fraldinha', price: 44.90 },
+    { name: 'Alcatra', price: 42.90 },
+    { name: 'Filé Mignon', price: 79.90, apelidos: ['file', 'mignon'] },
+    { name: 'Contra Filé', price: 39.90, apelidos: ['contra file', 'contrafile'] },
+    { name: 'Linguiça Toscana', price: 24.90, apelidos: ['linguica', 'toscana'] },
+    { name: 'Coração de Frango', price: 19.90, apelidos: ['coracao', 'frango'] }
+  ],
+  preparos: [
+    { name: 'Inteiro' },
+    { name: 'Fatiado', apelidos: ['fatiar', 'cortado'] },
+    { name: 'Moído', apelidos: ['moer', 'moido'] },
+    { name: 'Em cubos', apelidos: ['cubo', 'cubos', 'espetinho'] },
+    { name: 'Temperado', apelidos: ['tempero', 'temperado'] }
+  ],
+  upsellsBebida: [
+    { name: 'Carvão 5kg', price: 18, apelidos: ['carvao'] },
+    { name: 'Sal Grosso 1kg', price: 8, apelidos: ['sal'] },
+    { name: 'Farofa Pronta', price: 10, apelidos: ['farofa'] }
+  ],
+  upsellsSobremesa: []
+};
+
+function getFlowSteps() { return FLOW_STEPS; }
+function getDefaultCardapio() { return DEFAULT_CARDAPIO; }
+
+// ─── HANDLERS ─────────────────────────────────────────────────
+
+function handleStep(etapa, text, state, cardapio) {
+  switch (etapa) {
+    case 'MONTANDO_CORTE': return handleCorte(text, state, cardapio);
+    case 'MONTANDO_PESO': return handlePeso(text, state, cardapio);
+    case 'MONTANDO_PREPARO': return handlePreparo(text, state, cardapio);
+    case 'OFERECENDO_UPSELL': return handleUpsell(text, state, cardapio);
+    default: return null;
+  }
+}
+
+function handleCorte(text, state, cardapio) {
+  const cortes = cardapio.cortes || DEFAULT_CARDAPIO.cortes;
+  const selecionados = ai.interpretItensMultiplos(text, cortes);
+
+  if (selecionados.length === 0) {
+    const lista = cortes.map(c => `• *${c.name}* — R$ ${T.fmt(c.price)}/kg`).join('\n');
+    return { state, response: `Qual corte você deseja?\n${lista}` };
+  }
+
+  const corte = selecionados[0]; // Um corte por vez
+  state._corteAtual = {
+    tipo: 'corte',
+    name: corte.name,
+    pricePerKg: corte.price,
+    price: 0,
+    estimated_price: 0,
+    quantity: { value: 1, unit: 'kg', type: 'weight' },
+    peso: null,
+    preparo: null
+  };
+
+  state.etapa = 'MONTANDO_PESO';
+  return { state, response: `*${corte.name}* — R$ ${T.fmt(corte.price)}/kg\nQuantos *quilos* (ou gramas)?\n_(Ex: 2kg, 500g, 1.5)_` };
+}
+
+function handlePeso(text, state) {
+  const lower = ai.normalizar(text);
+  let peso = null;
+
+  // Tenta extrair peso em kg ou gramas
+  const kgMatch = lower.match(/([\d.,]+)\s*(?:kg|quilo)/);
+  const gMatch = lower.match(/([\d.,]+)\s*(?:g|grama)/);
+  const numMatch = lower.match(/^([\d.,]+)$/);
+
+  if (kgMatch) {
+    peso = parseFloat(kgMatch[1].replace(',', '.'));
+  } else if (gMatch) {
+    peso = parseFloat(gMatch[1].replace(',', '.')) / 1000;
+  } else if (numMatch) {
+    const num = parseFloat(numMatch[1].replace(',', '.'));
+    peso = num >= 100 ? num / 1000 : num; // >100 assume gramas
+  }
+
+  if (!peso || peso <= 0 || peso > 20) {
+    return { state, response: `Quantos quilos? (Ex: 1kg, 500g, 2.5)` };
+  }
+
+  state._corteAtual.peso = peso;
+  state._corteAtual.price = Math.round(state._corteAtual.pricePerKg * peso * 100) / 100;
+  state._corteAtual.estimated_price = state._corteAtual.price;
+
+  state.etapa = 'MONTANDO_PREPARO';
+  const preparos = DEFAULT_CARDAPIO.preparos.map(p => p.name).join(', ');
+  return { state, response: `${peso}kg de *${state._corteAtual.name}* = R$ ${T.fmt(state._corteAtual.price)}\n\nComo quer o preparo?\n${preparos}` };
+}
+
+function handlePreparo(text, state, cardapio) {
+  const preparos = cardapio.preparos || DEFAULT_CARDAPIO.preparos;
+  const selecionados = ai.interpretItensMultiplos(text, preparos);
+
+  if (selecionados.length === 0) {
+    const lower = ai.normalizar(text);
+    if (/nao|tanto faz|qualquer/.test(lower)) {
+      state._corteAtual.preparo = 'Inteiro';
+    } else {
+      return { state, response: `Como quer o preparo? (Inteiro, Fatiado, Moído, Em cubos, Temperado)` };
+    }
+  } else {
+    state._corteAtual.preparo = selecionados[0].name;
+  }
+
+  // Finaliza corte atual
+  const corte = state._corteAtual;
+  state.pedidoAtual.items.push(corte);
+  state._corteAtual = null;
+
+  state.etapa = 'OFERECENDO_UPSELL';
+  state._upsellPhase = 'bebida';
+  return {
+    state,
+    response: [
+      `🥩 *Anotado!*\n${formatItemForSummary(corte)}`,
+      `Quer adicionar algo?\n${(cardapio.upsellsBebida || DEFAULT_CARDAPIO.upsellsBebida).map(b => `• ${b.name} (R$ ${T.fmt(b.price)})`).join('\n')}\n_(ou "não")_`
+    ]
+  };
+}
+
+function handleUpsell(text, state, cardapio) {
+  const extras = ai.interpretUpsell(text, cardapio.upsellsBebida || DEFAULT_CARDAPIO.upsellsBebida);
+  if (extras && extras.length > 0) {
+    extras.forEach(e => {
+      state.pedidoAtual.items.push({
+        tipo: 'extra', name: e.name, price: e.price, quantity: 1
+      });
+    });
+  }
+
+  state.etapa = 'AGUARDANDO_TIPO';
+  const ultimoCorte = [...state.pedidoAtual.items].reverse().find(i => i.tipo === 'carne');
+  return { state, response: T.perguntarTipo(formatItemForSummary(ultimoCorte)) };
+}
+
+// ─── INTERFACE ───────────────────────────────────────────────
+
+function buildFastTrackItem() { return null; }
+
+function validateItem(item) {
+  const errors = [];
+  if (item.tipo !== 'corte' && item.tipo !== 'carne') return { valid: true, errors: [] };
+  if (!item.name) errors.push('Corte não definido');
+  if (!item.peso || item.peso <= 0) errors.push('Peso inválido');
+  if (!item.price || item.price <= 0) errors.push('Preço inválido');
+  return { valid: errors.length === 0, errors };
+}
+
+function calculateItemPrice(item) {
+  if (item.tipo !== 'corte' && item.tipo !== 'carne') return item.price || 0;
+  return Math.round((item.pricePerKg || 0) * (item.peso || 0) * 100) / 100;
+}
+
+function formatItemForSummary(item) {
+  if (!item || (item.tipo !== 'corte' && item.tipo !== 'carne')) {
+    if (item) return `• ${item.quantity || 1}x ${item.name} — R$ ${T.fmt(item.price * (item.quantity || 1))}`;
+    return '';
+  }
+  let txt = `🥩 *${item.name}* — ${item.peso}kg\n`;
+  txt += `R$ ${T.fmt(item.price)}`;
+  if (item.preparo && item.preparo !== 'Inteiro') txt += ` (${item.preparo})`;
+  return txt + '\n';
+}
+
+const templates = {
+  saudacao: (companyName) => [
+    `Olá! Bem-vindo ao *${companyName}*! 🥩`,
+    `O que vai ser hoje? Temos vários cortes disponíveis!`
+  ],
+  saudacaoCliente: (nome, companyName) => [
+    `Olá, *${nome}*! Bem-vindo de volta ao *${companyName}*! 🥩`,
+    `Qual corte vai levar hoje?`
+  ]
+};
+
+module.exports = {
+  business_type,
+  getFlowSteps,
+  getDefaultCardapio,
+  handleStep,
+  buildFastTrackItem,
+  validateItem,
+  calculateItemPrice,
+  formatItemForSummary,
+  templates
+};

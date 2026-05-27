@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      width: 60px;
+      height: 100vh;
+      background: #0d0d1a;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 10px 0 16px;
+      -webkit-app-region: no-drag;
+      user-select: none;
+      overflow: hidden;
+      border-right: 1px solid rgba(255,255,255,0.06);
+    }
+
+    .nav-btn {
+      position: relative;
+      width: 44px;
+      height: 44px;
+      border: none;
+      background: transparent;
+      border-radius: 10px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: rgba(255,255,255,0.35);
+      transition: background 0.2s, color 0.2s, transform 0.15s;
+      margin: 3px 0;
+    }
+    .nav-btn:hover {
+      background: rgba(255,255,255,0.07);
+      color: rgba(255,255,255,0.75);
+      transform: scale(1.05);
+    }
+    .nav-btn:active {
+      transform: scale(0.95);
+    }
+    .nav-btn.active {
+      color: #ff8200;
+    }
+    .nav-btn.active::before {
+      content: '';
+      position: absolute;
+      left: -8px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 3px;
+      height: 22px;
+      background: #ff8200;
+      border-radius: 0 3px 3px 0;
+    }
+
+    /* WhatsApp active = verde oficial */
+    .nav-btn.whatsapp-active {
+      color: #25D366;
+    }
+    .nav-btn.whatsapp-active::before {
+      background: #25D366;
+    }
+
+    .badge {
+      position: absolute;
+      top: 7px;
+      right: 7px;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      border: 1.5px solid #0d0d1a;
+      display: none;
+    }
+    .badge.show { display: block; }
+    .badge.green { background: #22c55e; }
+    .badge.red   { background: #ef4444; }
+
+    /* Bot status indicator */
+    .bot-indicator {
+      position: absolute;
+      bottom: 5px;
+      right: 5px;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #22c55e;
+      border: 1.5px solid #0d0d1a;
+      display: none;
+    }
+    .bot-indicator.show { display: block; }
+    .bot-indicator.paused { background: #f59e0b; }
+
+    .nav-btn[title]:hover::after {
+      content: attr(title);
+      position: absolute;
+      left: calc(100% + 10px);
+      top: 50%;
+      transform: translateY(-50%);
+      background: #1e1e32;
+      color: #fff;
+      font-size: 11px;
+      font-family: 'Segoe UI', sans-serif;
+      white-space: nowrap;
+      padding: 4px 8px;
+      border-radius: 5px;
+      pointer-events: none;
+      z-index: 100;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .spacer { flex: 1; }
+
+    /* Logout btn — cor avermelhada suave pra diferençar dos botões de nav */
+    .nav-btn.logout-btn { color: rgba(239,68,68,0.5); }
+    .nav-btn.logout-btn:hover { background: rgba(239,68,68,0.12); color: rgba(239,68,68,0.9); }
+
+    .divider {
+      width: 28px;
+      height: 1px;
+      background: rgba(255,255,255,0.08);
+      margin: 6px 0;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- WhatsApp Web — Ícone oficial -->
+  <button class="nav-btn" id="btn-whatsapp" title="WhatsApp Web">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+    </svg>
+    <div class="badge red" id="whatsapp-badge"></div>
+    <div class="bot-indicator" id="bot-indicator"></div>
+  </button>
+
+  <div class="divider"></div>
+
+  <!-- Conta / Login -->
+  <button class="nav-btn active" id="btn-conta" title="Conta">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2a7.2 7.2 0 01-6-3.22c.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08a7.2 7.2 0 01-6 3.22z"/>
+    </svg>
+  </button>
+
+  <!-- Logout — visível quando logado (logo abaixo da conta, não no rodapé) -->
+  <button class="nav-btn logout-btn" id="btn-logout" title="Sair da Conta" style="display:none">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/>
+    </svg>
+  </button>
+
+  <div class="spacer"></div>
+
+  <script>
+    const { ipcRenderer } = require('electron');
+
+    const btns = {
+      whatsapp:  document.getElementById('btn-whatsapp'),
+      conta:     document.getElementById('btn-conta'),
+    };
+    const btnLogout = document.getElementById('btn-logout');
+    const botIndicator = document.getElementById('bot-indicator');
+    let isLoggedIn = false;
+
+    function setActive(name) {
+      Object.values(btns).forEach(b => {
+        b.classList.remove('active');
+        b.classList.remove('whatsapp-active');
+      });
+      if (name === 'whatsapp' && btns.whatsapp) {
+        btns.whatsapp.classList.add('active');
+        btns.whatsapp.classList.add('whatsapp-active');
+      } else if (name === 'conta' && btns.conta) {
+        btns.conta.classList.add('active');
+      } else if (name === 'sistema' && btns.conta) {
+        btns.conta.classList.add('active');
+      }
+      // Mostra logout sempre que não está na tela de login
+      btnLogout.style.display = (name === 'conta') ? 'none' : 'flex';
+      if (name !== 'conta') isLoggedIn = true;
+    }
+
+    btns.whatsapp.onclick = () => ipcRenderer.send('sidebar-nav', 'whatsapp');
+    btns.conta.onclick    = () => {
+      // Se logado, vai para sistema. Se não, vai para login (conta)
+      ipcRenderer.send('sidebar-nav', isLoggedIn ? 'sistema' : 'conta');
+    };
+    btnLogout.onclick     = () => ipcRenderer.send('logout-merchant-from-sidebar');
+
+    ipcRenderer.on('sidebar-set-active', (_, name) => setActive(name));
+
+    ipcRenderer.on('whats-status-update', (_, status) => {
+      const badge = document.getElementById('whatsapp-badge');
+      badge.className = status.connected ? 'badge green show' : 'badge red show';
+    });
+
+    ipcRenderer.on('merchant-logged-in', (_, data) => {
+      isLoggedIn = true;
+      btnLogout.style.display = 'flex';
+      btns.conta.title = data.companyName || data.email || 'Painel';
+    });
+
+    ipcRenderer.on('merchant-logged-out', () => {
+      isLoggedIn = false;
+      btnLogout.style.display = 'none';
+      btns.conta.title = 'Conta';
+    });
+
+    ipcRenderer.on('bot-status-changed', (_, status) => {
+      botIndicator.classList.add('show');
+      if (status.enabled) {
+        botIndicator.classList.remove('paused');
+        botIndicator.title = 'Robô ativo';
+      } else {
+        botIndicator.classList.add('paused');
+        botIndicator.title = 'Robô pausado';
+      }
+    });
+  </script>
+</body>
+</html>

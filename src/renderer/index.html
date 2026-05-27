@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WhatsApp Panel</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <!-- TITLEBAR -->
+  <div id="titlebar">
+    <div class="titlebar-drag">
+      <span class="titlebar-title">WhatsApp Panel</span>
+    </div>
+    <div class="titlebar-buttons">
+      <button id="btn-minimize" class="titlebar-btn" title="Minimizar">
+        <svg width="12" height="12" viewBox="0 0 12 12">
+          <rect fill="currentColor" width="10" height="1" x="1" y="6"></rect>
+        </svg>
+      </button>
+      <button id="btn-maximize" class="titlebar-btn" title="Maximizar">
+        <svg width="12" height="12" viewBox="0 0 12 12">
+          <rect fill="none" stroke="currentColor" stroke-width="1" width="9" height="9" x="1.5" y="1.5"></rect>
+        </svg>
+      </button>
+      <button id="btn-close" class="titlebar-btn btn-close" title="Fechar">
+        <svg width="12" height="12" viewBox="0 0 12 12">
+          <line stroke="currentColor" stroke-width="1.2" x1="1" y1="1" x2="11" y2="11"></line>
+          <line stroke="currentColor" stroke-width="1.2" x1="11" y1="1" x2="1" y2="11"></line>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- SIDEBAR -->
+  <div id="sidebar">
+    <div class="menu-wrapper">
+      <!-- Logo -->
+      <a class="sidebar-item" id="sidebar-logo" title="WhatsApp Panel">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="white">
+          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+        </svg>
+      </a>
+
+      <!-- WhatsApp Button -->
+      <a class="sidebar-item active" id="btn-whatsapp" title="WhatsApp">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="white">
+          <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+        </svg>
+        <span id="whats-badge" class="badge" style="display:none;">!</span>
+      </a>
+
+      <!-- Reload Button -->
+      <a class="sidebar-item" id="btn-reload" title="Recarregar WhatsApp">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="white">
+          <path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>
+        </svg>
+      </a>
+
+      <!-- Exportar Conversas -->
+      <a class="sidebar-item" id="btn-export" title="Exportar Conversas">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="white">
+          <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
+        </svg>
+      </a>
+
+      <!-- Configurações -->
+      <a class="sidebar-item" id="btn-settings" title="Configurações">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="white">
+          <path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/>
+        </svg>
+      </a>
+
+      <!-- Logout WhatsApp Button -->
+      <a class="sidebar-item" id="btn-logout" title="Desconectar WhatsApp (Limpar sessão)">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="white">
+          <path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/>
+        </svg>
+      </a>
+
+      <!-- Sair da Conta (Merchant Logout) -->
+      <a class="sidebar-item" id="btn-merchant-logout" title="Sair da Conta (Desconectar Lojista)" style="display:none;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="#ff4d4d">
+          <path d="M10.09 15.59L11.5 17l5-5-5-5-1.41 1.41L13.67 11H3v2h10.67l-3.58 3.59zM19 3H5c-1.11 0-2 .9-2 2v4h2V5h14v14H5v-4H3v4c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/>
+        </svg>
+      </a>
+
+      <!-- Status Indicator -->
+      <a class="sidebar-item menu-item-bottom" id="status-indicator" title="Status: Desconectado">
+        <div id="status-dot" class="status-dot disconnected"></div>
+        <span class="status-text" id="status-text">Offline</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- LOADING SCREEN -->
+  <div id="loading-screen">
+    <div class="loader-icon">
+      <div class="loader-dot"></div>
+      <div class="loader-dot"></div>
+      <div class="loader-dot"></div>
+    </div>
+    <p class="loader-message">Carregando WhatsApp Web...</p>
+  </div>
+
+
+  <!-- MODAL: EXPORTAR CONVERSAS -->
+  <div id="modal-export" class="modal" style="display:none;">
+    <div class="modal-overlay"></div>
+    <div class="modal-content">
+      <h2>Exportar Conversas</h2>
+      <p>Extrair histórico de conversas individuais (grupos são ignorados).</p>
+      
+      <div class="form-group">
+        <label>Quantidade de conversas:</label>
+        <div class="radio-group">
+          <label><input type="radio" name="export-limit" value="10"> 10</label>
+          <label><input type="radio" name="export-limit" value="50"> 50</label>
+          <label><input type="radio" name="export-limit" value="100" checked> 100</label>
+          <label><input type="radio" name="export-limit" value="300"> 300</label>
+          <label><input type="radio" name="export-limit" value="500"> 500</label>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Formato:</label>
+        <div class="radio-group">
+          <label><input type="radio" name="export-format" value="json" checked> JSON</label>
+          <label><input type="radio" name="export-format" value="csv"> CSV</label>
+        </div>
+      </div>
+
+      <div id="export-progress" style="display:none;">
+        <div class="progress-bar">
+          <div class="progress-fill" id="progress-fill"></div>
+        </div>
+        <p id="progress-text">Extraindo...</p>
+      </div>
+
+      <div class="modal-buttons">
+        <button class="btn btn-secondary" id="btn-export-cancel">Cancelar</button>
+        <button class="btn btn-primary" id="btn-export-start">Iniciar Extração</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: CONFIGURAÇÕES -->
+  <div id="modal-settings" class="modal" style="display:none;">
+    <div class="modal-overlay"></div>
+    <div class="modal-content modal-large">
+      <h2>Configurações</h2>
+      
+      <div class="settings-section">
+        <h3>Auto-Resposta</h3>
+        <p class="settings-desc">Responde automaticamente novas conversas com uma mensagem de boas-vindas. Grupos são sempre ignorados.</p>
+        
+        <div class="form-group">
+          <label class="toggle-label">
+            <input type="checkbox" id="setting-auto-reply-enabled">
+            <span class="toggle-switch"></span>
+            Ativar auto-resposta
+          </label>
+        </div>
+
+        <div class="form-group">
+          <label>Mensagem de boas-vindas:</label>
+          <textarea id="setting-auto-reply-message" rows="4" placeholder="Digite a mensagem que será enviada automaticamente..."></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>Delay antes de responder (ms):</label>
+          <input type="number" id="setting-auto-reply-delay" min="1000" max="30000" step="1000" value="3000">
+        </div>
+
+        <div class="form-group">
+          <label class="toggle-label">
+            <input type="checkbox" id="setting-auto-reply-only-new" checked>
+            <span class="toggle-switch"></span>
+            Responder apenas conversas novas (primeira mensagem)
+          </label>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <h3>Impressão Térmica</h3>
+        <p class="settings-desc">Selecione a impressora padrão para emitir os recibos dos pedidos finalizados.</p>
+        <div class="form-group">
+          <label>Impressora:</label>
+          <select id="setting-printer-name">
+            <option value="">Impressora Padrão (Silenciosa)</option>
+          </select>
+        </div>
+      </div>
+
+
+      <div class="modal-buttons">
+        <button class="btn btn-secondary" id="btn-settings-cancel">Cancelar</button>
+        <button class="btn btn-primary" id="btn-settings-save">Salvar</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="renderer.js"></script>
+</body>
+</html>

@@ -1,0 +1,274 @@
+// plugins/marmitaria.js
+// ═══════════════════════════════════════════════════════════════
+// Plugin Marmitaria — Fluxo de montagem de marmitas
+// Interface padrão de plugin (pluginManager.js)
+// ═══════════════════════════════════════════════════════════════
+
+const ai = require('../aiInterpreter');
+const T = require('../templates');
+const actionProcessor = require('../actionProcessor');
+
+// ─── CONFIGURAÇÃO DO NICHO ────────────────────────────────────
+
+const business_type = 'marmitaria';
+
+const FLOW_STEPS = [
+  'MONTANDO_TAMANHO',
+  'MONTANDO_PROTEINA',
+  'MONTANDO_ACOMPANHAMENTO',
+  'MONTANDO_SALADA',
+  'OFERECENDO_UPSELL'
+];
+
+const DEFAULT_CARDAPIO = {
+  proteinas: [
+    { name: 'Frango' }, { name: 'Churrasco', apelidos: ['churras'] }, { name: 'Costela' },
+    { name: 'Linguiça', apelidos: ['linguica'] }, { name: 'Carne Cozida', apelidos: ['carne'] }
+  ],
+  acompanhamentos: [
+    { name: 'Arroz', apelidos: ['arro'] }, { name: 'Feijão', apelidos: ['feijao'] }, { name: 'Macarrão', apelidos: ['macarrao'] },
+    { name: 'Purê', apelidos: ['pure'] }, { name: 'Tropeiro' }
+  ],
+  saladas: [
+    { name: 'Maionese' }, { name: 'Beterraba' }, { name: 'Alface' },
+    { name: 'Repolho' }, { name: 'Pepino' }
+  ],
+  upsellsBebida: [
+    { name: 'Suco Natural', price: 8 },
+    { name: 'Refrigerante Lata', price: 6, apelidos: ['refrigerante', 'refri', 'lata', 'coca'] },
+    { name: 'Refrigerante 2L', price: 10, apelidos: ['2l'] }
+  ],
+  upsellsSobremesa: [
+    { name: 'Pudim', price: 6 },
+    { name: 'Mousse', price: 6 }
+  ]
+};
+
+function getFlowSteps() {
+  return FLOW_STEPS;
+}
+
+function getDefaultCardapio() {
+  return DEFAULT_CARDAPIO;
+}
+
+// ─── HANDLERS DE ETAPA ────────────────────────────────────────
+
+function handleStep(etapa, text, state, cardapio) {
+  switch (etapa) {
+    case 'MONTANDO_TAMANHO':
+      return handleTamanho(text, state);
+    case 'MONTANDO_PROTEINA':
+      return handleProteina(text, state, cardapio);
+    case 'MONTANDO_ACOMPANHAMENTO':
+      return handleAcompanhamento(text, state, cardapio);
+    case 'MONTANDO_SALADA':
+      return handleSalada(text, state, cardapio);
+    case 'OFERECENDO_UPSELL':
+      return handleUpsell(text, state, cardapio);
+    default:
+      return null; // etapa não pertence a este plugin
+  }
+}
+
+function handleTamanho(text, state) {
+  const tamanho = ai.interpretTamanho(text);
+  let qty = ai.interpretQuantity(text) || 1;
+
+  if (!tamanho) {
+    return { state, response: T.tamanhoNaoEntendido() };
+  }
+
+  state._pendingMarmitas = qty;
+  state._currentMarmitaNumber = 1;
+
+  iniciarNovaMarmita(tamanho, state);
+  state.etapa = 'MONTANDO_PROTEINA';
+
+  return { state, response: T.pedirProteina(qty) };
+}
+
+function handleProteina(text, state, cardapio) {
+  const selecionadas = ai.interpretItensMultiplos(text, cardapio.proteinas);
+
+  if (selecionadas.length === 0) {
+    const lower = ai.normalizar(text);
+    if (lower.includes('so') || lower.includes('nao quero') || lower.includes('nada') || lower.includes('nenhum')) {
+      state.etapa = 'MONTANDO_ACOMPANHAMENTO';
+      return { state, response: T.pedirAcompanhamento() };
+    }
+    if (/sim|pode|quero|ok|claro/.test(lower)) {
+      return { state, response: T.pedirProteina() };
+    }
+    return { state, response: T.proteinaNaoEntendida() };
+  }
+
+  state._marmitaAtual.proteinas.push(...selecionadas.slice(0, 2));
+  state.etapa = 'MONTANDO_ACOMPANHAMENTO';
+  return { state, response: T.pedirAcompanhamento() };
+}
+
+function handleAcompanhamento(text, state, cardapio) {
+  const selecionados = ai.interpretItensMultiplos(text, cardapio.acompanhamentos);
+
+  if (selecionados.length === 0 && text.length > 2) {
+    const lower = ai.normalizar(text);
+    if (!/nao|nada|pula|so|sim|pode|quero|ok|claro/.test(lower)) {
+      return { state, response: T.acompanhamentoNaoEntendido() };
+    }
+    if (/sim|pode|quero|ok|claro/.test(lower)) {
+      return { state, response: T.pedirAcompanhamento() };
+    }
+  }
+
+  state._marmitaAtual.acompanhamentos.push(...selecionados.slice(0, 2));
+  state.etapa = 'MONTANDO_SALADA';
+  return { state, response: T.pedirSalada() };
+}
+
+function handleSalada(text, state, cardapio) {
+  const selecionados = ai.interpretItensMultiplos(text, cardapio.saladas);
+
+  if (selecionados.length === 0 && text.length > 2) {
+    const lower = ai.normalizar(text);
+    if (!/nao|nada|pula|so|sem|sim|pode|quero|ok|claro/.test(lower)) {
+      return { state, response: T.saladaNaoEntendida() };
+    }
+    if (/sim|pode|quero|ok|claro/.test(lower)) {
+      return { state, response: T.pedirSalada() };
+    }
+  }
+
+  state._marmitaAtual.saladas.push(...selecionados.slice(0, 2));
+  finalizarMarmitaAtual(state);
+
+  if (state._currentMarmitaNumber < state._pendingMarmitas) {
+    state._currentMarmitaNumber++;
+    state.etapa = 'MONTANDO_TAMANHO';
+    return { state, response: `Marmita anotada! Qual vai ser o tamanho da sua próxima marmita? (Pequena/Grande)` };
+  }
+
+  state.etapa = 'OFERECENDO_UPSELL';
+  state._upsellPhase = 'bebida';
+  return {
+    state,
+    response: T.oferecerUpsellBebida(`🍱 *Marmita montada!*`)
+  };
+}
+
+function handleUpsell(text, state, cardapio) {
+  if (state._upsellPhase === 'bebida') {
+    const bebidas = ai.interpretUpsell(text, cardapio.upsellsBebida);
+    if (bebidas && bebidas.length > 0) {
+      bebidas.forEach(bebida => {
+        state.pedidoAtual.items.push({
+          tipo: 'extra',
+          name: bebida.name,
+          price: bebida.price,
+          quantity: 1
+        });
+      });
+    }
+
+    state.etapa = 'AGUARDANDO_TIPO';
+    const ultimaMarmita = [...state.pedidoAtual.items].reverse().find(i => i.tipo === 'marmita');
+    return { state, response: T.perguntarTipo(T._formatarMarmita(ultimaMarmita)) };
+  }
+
+  state.etapa = 'AGUARDANDO_TIPO';
+  return { state, response: T.perguntarTipo('') };
+}
+
+// ─── FAST TRACK ──────────────────────────────────────────────
+
+function buildFastTrackItem(ftResult, cardapio) {
+  const ftValidado = actionProcessor.processAction(ftResult, cardapio);
+  if (!ftValidado || !ftValidado.sucesso) return null;
+
+  const preco = ftValidado.tamanho.toLowerCase() === 'grande' ? 22 : 20;
+  return {
+    tipo: 'marmita',
+    tamanho: ftValidado.tamanho,
+    price: preco,
+    quantity: 1,
+    proteinas: (ftValidado.proteinas || []).map(p => ({ name: p })),
+    acompanhamentos: (ftValidado.acompanhamentos || []).map(a => ({ name: a })),
+    saladas: (ftValidado.saladas || []).map(s => ({ name: s }))
+  };
+}
+
+// ─── VALIDAÇÃO E PREÇO ───────────────────────────────────────
+
+function validateItem(item) {
+  const errors = [];
+  if (item.tipo !== 'marmita') return { valid: true, errors: [] };
+
+  if (!item.tamanho) errors.push('Tamanho não definido');
+  if (!item.proteinas || item.proteinas.length === 0) {
+    errors.push('Marmita precisa de pelo menos uma proteína');
+  }
+  const price = item.base_price ?? item.price;
+  if (!price || price <= 0) errors.push('Preço inválido');
+
+  return { valid: errors.length === 0, errors };
+}
+
+function calculateItemPrice(item) {
+  if (item.tipo !== 'marmita') return item.price || 0;
+  return item.tamanho === 'Grande' ? 22 : 20;
+}
+
+function formatItemForSummary(item) {
+  if (item.tipo === 'marmita') return T._formatarMarmita(item);
+  return `• ${item.quantity || 1}x ${item.name} — R$ ${T.fmt(item.price * (item.quantity || 1))}`;
+}
+
+// ─── HELPERS INTERNOS ────────────────────────────────────────
+
+function iniciarNovaMarmita(tamanho, state) {
+  const preco = tamanho === 'Grande' ? 22 : 20;
+  state._marmitaAtual = {
+    tipo: 'marmita',
+    tamanho: tamanho,
+    price: preco,
+    quantity: 1,
+    proteinas: [],
+    acompanhamentos: [],
+    saladas: []
+  };
+}
+
+function finalizarMarmitaAtual(state) {
+  if (state._marmitaAtual) {
+    state.pedidoAtual.items.push(state._marmitaAtual);
+    state._marmitaAtual = null;
+  }
+}
+
+// ─── TEMPLATES ESPECÍFICOS DO PLUGIN ─────────────────────────
+
+const templates = {
+  saudacao: T.saudacaoTamanho,
+  saudacaoCliente: T.saudacaoTamanhoCliente,
+  tamanhoNaoEntendido: T.tamanhoNaoEntendido,
+  pedirProteina: T.pedirProteina,
+  proteinaNaoEntendida: T.proteinaNaoEntendida,
+  pedirAcompanhamento: T.pedirAcompanhamento,
+  acompanhamentoNaoEntendido: T.acompanhamentoNaoEntendido,
+  pedirSalada: T.pedirSalada,
+  saladaNaoEntendida: T.saladaNaoEntendida,
+  oferecerUpsellBebida: T.oferecerUpsellBebida,
+  formatarMarmita: T._formatarMarmita
+};
+
+module.exports = {
+  business_type,
+  getFlowSteps,
+  getDefaultCardapio,
+  handleStep,
+  buildFastTrackItem,
+  validateItem,
+  calculateItemPrice,
+  formatItemForSummary,
+  templates
+};

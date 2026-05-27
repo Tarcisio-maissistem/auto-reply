@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      height: 40px;
+      background: #1a1a2e;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      -webkit-app-region: drag;
+      user-select: none;
+      overflow: hidden;
+    }
+    .title {
+      /* offset by sidebar width (60px) so title doesn't sit behind it */
+      padding-left: 72px;
+      color: #aaa;
+      font-size: 13px;
+      font-family: 'Segoe UI', sans-serif;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+    .title svg { opacity: 0.7; }
+    .controls {
+      display: flex;
+      height: 40px;
+      /* right margin so buttons aren't flush against screen edge */
+      padding-right: 4px;
+      -webkit-app-region: no-drag;
+    }
+    .btn {
+      width: 40px;
+      height: 32px;
+      margin: auto 2px;
+      border: none;
+      border-radius: 6px;
+      background: transparent;
+      color: #ccc;
+      font-size: 14px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.1s;
+    }
+    .btn:hover { background: rgba(255,255,255,0.1); }
+    .btn.close:hover { background: #e81123; color: #fff; }
+  </style>
+</head>
+<body>
+  <div class="title">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="#ff7b00">
+      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+    </svg>
+    Ana Food
+  </div>
+  <div class="controls">
+    <button class="btn" id="btn-min" title="Minimizar">&#8722;</button>
+    <button class="btn" id="btn-max" title="Maximizar">&#9633;</button>
+    <button class="btn close" id="btn-close" title="Fechar">&#10005;</button>
+  </div>
+  <script>
+    const { ipcRenderer } = require('electron');
+    document.getElementById('btn-min').onclick = () => ipcRenderer.send('minimize');
+    document.getElementById('btn-max').onclick = () => ipcRenderer.send('maximize');
+    document.getElementById('btn-close').onclick = () => ipcRenderer.send('close');
+  </script>
+</body>
+</html>

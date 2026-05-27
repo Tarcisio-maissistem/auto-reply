@@ -1,0 +1,28 @@
+# Dependências
+node_modules/
+app_code/node_modules/
+
+# Variáveis de ambiente (secrets)
+.env
+.env.local
+app_code/.env
+
+# Binários / builds gerados
+extracted/
+*.nupkg
+*.exe
+*.zip
+*.asar
+
+# Arquivos temporários e de diagnóstico
+diag-output.txt
+quit-signal.txt
+analyze*.py
+try_zip.py
+test-*.js
+test-debug-ui.js
+electron_bundle.js
+
+# Logs
+*.log
+npm-debug.log*
