@@ -6,117 +6,78 @@
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       height: 40px;
-      background: #1a1a2e;
+      background: #0d0d1a;
       display: flex;
       align-items: center;
       justify-content: space-between;
       -webkit-app-region: drag;
       user-select: none;
       overflow: hidden;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
     }
     .title {
-      padding-left: 12px;
-      color: #aaa;
-      font-size: 13px;
+      padding-left: 72px; /* offset da sidebar */
+      color: rgba(255,255,255,0.4);
+      font-size: 12px;
       font-family: 'Segoe UI', sans-serif;
       display: flex;
       align-items: center;
-      gap: 7px;
+      gap: 6px;
+      letter-spacing: 0.3px;
     }
-    .title svg { opacity: 0.7; }
+    .title svg { opacity: 0.6; }
     .controls {
       display: flex;
       height: 40px;
       padding-right: 4px;
       align-items: center;
-      gap: 2px;
       -webkit-app-region: no-drag;
     }
     .btn {
-      width: 40px;
-      height: 32px;
+      width: 46px;
+      height: 40px;
       border: none;
-      border-radius: 6px;
       background: transparent;
-      color: #ccc;
-      font-size: 14px;
+      color: rgba(255,255,255,0.5);
+      font-size: 13px;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: background 0.1s;
-    }
-    .btn:hover { background: rgba(255,255,255,0.1); }
-    .btn.close:hover { background: #e81123; color: #fff; }
-
-    /* Logout — separador visual antes dos controles de janela */
-    .btn-logout {
-      width: auto;
-      padding: 0 10px;
-      height: 26px;
-      border: none;
-      border-radius: 5px;
-      background: rgba(239,68,68,0.15);
-      color: rgba(239,68,68,0.85);
-      font-size: 11px;
-      font-family: 'Segoe UI', sans-serif;
-      cursor: pointer;
-      display: none;             /* oculto até login */
-      align-items: center;
-      gap: 5px;
-      margin-right: 6px;
       transition: background 0.1s, color 0.1s;
     }
-    .btn-logout:hover { background: rgba(239,68,68,0.3); color: #fff; }
-    .btn-logout.visible { display: flex; }
-
-    .separator {
-      width: 1px;
-      height: 18px;
-      background: rgba(255,255,255,0.1);
-      margin: 0 4px;
-    }
+    .btn:hover { background: rgba(255,255,255,0.08); color: #fff; }
+    .btn.close:hover { background: #c42b1c; color: #fff; }
   </style>
 </head>
 <body>
   <div class="title">
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="#ff7b00">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="#ff7b00">
       <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
     </svg>
     Ana Food
   </div>
 
   <div class="controls">
-    <!-- Sair da conta — visível apenas quando logado -->
-    <button class="btn-logout" id="btn-logout" title="Sair da conta">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
-        <path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/>
-      </svg>
-      Sair da Conta
+    <button class="btn" id="btn-min" title="Minimizar">
+      <svg width="10" height="1" viewBox="0 0 10 1" fill="currentColor"><rect width="10" height="1"/></svg>
     </button>
-
-    <div class="separator"></div>
-
-    <button class="btn" id="btn-min" title="Minimizar">&#8722;</button>
-    <button class="btn" id="btn-max" title="Maximizar">&#9633;</button>
-    <button class="btn close" id="btn-close" title="Fechar">&#10005;</button>
+    <button class="btn" id="btn-max" title="Maximizar">
+      <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1"><rect x="0.5" y="0.5" width="9" height="9"/></svg>
+    </button>
+    <button class="btn close" id="btn-close" title="Fechar">
+      <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor">
+        <line x1="0" y1="0" x2="10" y2="10" stroke="currentColor" stroke-width="1.2"/>
+        <line x1="10" y1="0" x2="0" y2="10" stroke="currentColor" stroke-width="1.2"/>
+      </svg>
+    </button>
   </div>
 
   <script>
     const { ipcRenderer } = require('electron');
-
-    document.getElementById('btn-min').onclick    = () => ipcRenderer.send('minimize');
-    document.getElementById('btn-max').onclick    = () => ipcRenderer.send('maximize');
-    document.getElementById('btn-close').onclick  = () => ipcRenderer.send('close');
-    document.getElementById('btn-logout').onclick = () => ipcRenderer.send('logout-from-titlebar');
-
-    // Mostrar/ocultar botão de logout conforme estado de login
-    ipcRenderer.on('titlebar-set-logged-in', () => {
-      document.getElementById('btn-logout').classList.add('visible');
-    });
-    ipcRenderer.on('titlebar-set-logged-out', () => {
-      document.getElementById('btn-logout').classList.remove('visible');
-    });
+    document.getElementById('btn-min').onclick   = () => ipcRenderer.send('minimize');
+    document.getElementById('btn-max').onclick   = () => ipcRenderer.send('maximize');
+    document.getElementById('btn-close').onclick = () => ipcRenderer.send('close');
   </script>
 </body>
 </html>

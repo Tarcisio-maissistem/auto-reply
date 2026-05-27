@@ -10,7 +10,7 @@ const vpsPrintService = require("./vps-print-service");
 
 // Configurações
 const configs = {
-  titlebarHeight: 0,  // Menu nativo do Windows — sem titlebar customizada
+  titlebarHeight: 40, // Titlebar customizada (frameless)
   sidebarWidth: 60,
   defaultWidth: 1280,
   defaultHeight: 768,
@@ -27,6 +27,7 @@ let sidebarView = null;  // 3-icon Electron sidebar
 let titlebarView = null;
 let tray = null;
 let settings = null;
+let optionsMenu = null;
 let autoReply = null;
 let apiInjected = false;
 let whatsappActive = false;
@@ -76,7 +77,7 @@ if (!gotTheLock) {
 async function createWindow() {
   // 1. BrowserWindow carrega apenas um fundo escuro — views são BrowserViews
   mainWindow = new BrowserWindow({
-    // frame: true (padrão) — mostra barra de título nativa do Windows + menu
+    frame: false,  // Frameless — titlebar customizada + sem menu nativo
     show: false,
     width: configs.defaultWidth,
     height: configs.defaultHeight,
@@ -140,8 +141,9 @@ async function createWindow() {
   mainWindow.maximize();
   mainWindow.show();
 
-  // 7. Criar sidebar (menu nativo já aparece na barra de título do Windows)
+  // 7. Criar sidebar + titlebar customizada
   createSidebarView();
+  createTitlebarView();
 
   // 8. Mostrar tela de login na inicialização
   showView('conta');
@@ -449,16 +451,10 @@ function createNativeMenu() {
     );
   }
 
-  const template = [
-    {
-      label: "Opções",
-      submenu: opcoesSubmenu,
-    },
-  ];
-
-  const menu = Menu.buildFromTemplate(template);
-  Menu.setApplicationMenu(menu);
-  console.log("[Main] Menu nativo criado");
+  // Frameless: sem menu nativo — armazenar para popup via botão na sidebar
+  optionsMenu = Menu.buildFromTemplate(opcoesSubmenu);
+  Menu.setApplicationMenu(null);
+  console.log("[Main] Menu de opções configurado (popup)");
 }
 
 function destroyLoginView() {
@@ -1128,6 +1124,9 @@ ipcMain.on("whats-status", (event, status) => {
 // ====================================================================
 // IPC: Basic controls
 // ====================================================================
+ipcMain.on("open-options-menu", () => {
+  if (optionsMenu && mainWindow) optionsMenu.popup({ window: mainWindow });
+});
 ipcMain.on("minimize", () => { if (mainWindow) mainWindow.minimize(); });
 ipcMain.on("maximize", () => {
   if (mainWindow) mainWindow.isMaximized() ? mainWindow.unmaximize() : mainWindow.maximize();
